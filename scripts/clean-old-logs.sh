@@ -41,8 +41,8 @@ EOF
 
 # Parse arguments
 DRY_RUN=false
-LOG_DIR="$DEFAULT_LOG_DIR"
-DAYS="$DEFAULT_DAYS"
+LOG_DIR=""
+DAYS=""
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -54,17 +54,19 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         *)
-            if [ -z "$LOG_DIR_SET" ]; then
+            if [ -z "$LOG_DIR" ]; then
                 LOG_DIR="$1"
-                LOG_DIR_SET=true
-            elif [ -z "$DAYS_SET" ]; then
+            elif [ -z "$DAYS" ]; then
                 DAYS="$1"
-                DAYS_SET=true
             fi
             shift
             ;;
     esac
 done
+
+# Set defaults if not provided
+LOG_DIR="${LOG_DIR:-$DEFAULT_LOG_DIR}"
+DAYS="${DAYS:-$DEFAULT_DAYS}"
 
 # Validate log directory
 if [ ! -d "$LOG_DIR" ]; then
@@ -119,7 +121,7 @@ else
     DELETED=0
     FAILED=0
     
-    echo "$OLD_FILES" | while read -r file; do
+    while read -r file; do
         if rm -f "$file" 2>/dev/null; then
             echo "  Deleted: $file"
             DELETED=$((DELETED + 1))
@@ -127,7 +129,7 @@ else
             echo -e "  ${RED}Failed: $file${NC}"
             FAILED=$((FAILED + 1))
         fi
-    done
+    done <<< "$OLD_FILES"
     
     echo ""
     echo -e "${GREEN}Cleanup completed!${NC}"

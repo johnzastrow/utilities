@@ -115,8 +115,10 @@ else
     for dir in "${DEFAULT_LOG_DIRS[@]}"; do
         if [ -d "$dir" ]; then
             while IFS= read -r -d '' file; do
-                SEARCH_FILES+=("$file")
-            done < <(find "$dir" -type f \( -name "*.log" -o -name "syslog" -o -name "messages" \) -readable -print0 2>/dev/null)
+                if [ -r "$file" ]; then
+                    SEARCH_FILES+=("$file")
+                fi
+            done < <(find "$dir" -type f \( -name "*.log" -o -name "syslog" -o -name "messages" \) -print0 2>/dev/null)
         fi
     done
 fi
@@ -144,7 +146,7 @@ TOTAL_MATCHES=0
 for logfile in "${SEARCH_FILES[@]}"; do
     if [ "$TODAY_ONLY" = true ]; then
         TODAY=$(date +"%b %d")
-        MATCHES=$(grep $IGNORE_CASE $CONTEXT "$TODAY" "$logfile" 2>/dev/null | grep -E $IGNORE_CASE $CONTEXT "$PATTERN" 2>/dev/null)
+        MATCHES=$(grep "$TODAY" "$logfile" 2>/dev/null | grep -E $IGNORE_CASE $CONTEXT "$PATTERN" 2>/dev/null)
     else
         MATCHES=$(grep -E $IGNORE_CASE $CONTEXT "$PATTERN" "$logfile" 2>/dev/null)
     fi

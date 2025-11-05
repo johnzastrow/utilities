@@ -116,17 +116,35 @@ if command -v multitail &> /dev/null; then
     multitail "${VALID_LOGS[@]}"
 else
     # Fall back to tail -f with label
-    tail -n "$LINES" -f "${VALID_LOGS[@]}" 2>&1 | while IFS= read -r line; do
-        # Add timestamp and color
-        if [[ "$line" == "==>"* ]]; then
-            # File header from tail
-            echo -e "${GREEN}${line}${NC}"
-        elif [[ "$line" == *"error"* ]] || [[ "$line" == *"ERROR"* ]] || [[ "$line" == *"Error"* ]]; then
-            echo -e "${RED}${line}${NC}"
-        elif [[ "$line" == *"warning"* ]] || [[ "$line" == *"WARNING"* ]] || [[ "$line" == *"Warning"* ]]; then
-            echo -e "${YELLOW}${line}${NC}"
-        else
-            echo "$line"
-        fi
-    done
+    # Note: Using stdbuf for unbuffered output to ensure colored filtering works in real-time
+    if command -v stdbuf &> /dev/null; then
+        stdbuf -oL tail -n "$LINES" -f "${VALID_LOGS[@]}" 2>&1 | while IFS= read -r line; do
+            # Add timestamp and color
+            if [[ "$line" == "==>"* ]]; then
+                # File header from tail
+                echo -e "${GREEN}${line}${NC}"
+            elif [[ "$line" == *"error"* ]] || [[ "$line" == *"ERROR"* ]] || [[ "$line" == *"Error"* ]]; then
+                echo -e "${RED}${line}${NC}"
+            elif [[ "$line" == *"warning"* ]] || [[ "$line" == *"WARNING"* ]] || [[ "$line" == *"Warning"* ]]; then
+                echo -e "${YELLOW}${line}${NC}"
+            else
+                echo "$line"
+            fi
+        done
+    else
+        # Without stdbuf, output may be buffered
+        tail -n "$LINES" -f "${VALID_LOGS[@]}" 2>&1 | while IFS= read -r line; do
+            # Add timestamp and color
+            if [[ "$line" == "==>"* ]]; then
+                # File header from tail
+                echo -e "${GREEN}${line}${NC}"
+            elif [[ "$line" == *"error"* ]] || [[ "$line" == *"ERROR"* ]] || [[ "$line" == *"Error"* ]]; then
+                echo -e "${RED}${line}${NC}"
+            elif [[ "$line" == *"warning"* ]] || [[ "$line" == *"WARNING"* ]] || [[ "$line" == *"Warning"* ]]; then
+                echo -e "${YELLOW}${line}${NC}"
+            else
+                echo "$line"
+            fi
+        done
+    fi
 fi

@@ -93,7 +93,11 @@ if [ $? -eq 0 ]; then
     # List recent backups
     echo ""
     echo "Recent backups in $BACKUP_DIR:"
-    ls -lht "$BACKUP_DIR" | grep "${SOURCE_NAME}_" | head -5
+    # Try find with printf first, fall back to simple ls if it fails
+    if ! find "$BACKUP_DIR" -maxdepth 1 -name "${SOURCE_NAME}_*.tar.gz" -type f -printf "%T@ %Tc %p\n" 2>/dev/null | sort -rn | head -5 | cut -d' ' -f2-; then
+        # Fallback for systems without find -printf (like macOS)
+        ls -t "$BACKUP_DIR"/"${SOURCE_NAME}_"*.tar.gz 2>/dev/null | head -5 | xargs ls -lh 2>/dev/null
+    fi
     
     exit 0
 else
