@@ -20,9 +20,15 @@
 # Configuration and Global Variables
 ###############################################################################
 
-set -o errexit
-set -o nounset
+# Exit immediately if a command exits with non-zero status
+set -o errexit  # Same as set -e
+# Treat unset variables as an error
+set -o nounset  # Same as set -u
+# Pipe failures cause script to exit
 set -o pipefail
+#
+# Note: You can also use the compact form: set -euo pipefail
+# The verbose form above is used for educational purposes
 
 # Script metadata
 SCRIPT_NAME=$(basename "${0}")

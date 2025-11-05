@@ -31,6 +31,9 @@ set -o nounset  # Same as set -u
 set -o pipefail
 # Enable debug mode (uncomment to trace execution)
 # set -o xtrace  # Same as set -x
+#
+# Note: You can also use the compact form: set -euo pipefail
+# The verbose form above is used for educational purposes
 
 # Script metadata
 SCRIPT_NAME=$(basename "${0}")
@@ -43,6 +46,7 @@ readonly SCRIPT_VERSION="1.0.0"
 VERBOSE=0
 DEBUG=0
 DRY_RUN=0
+QUIET=0
 OUTPUT_FILE=""
 
 # Color codes for output (will be disabled if not a terminal)
@@ -80,21 +84,25 @@ log_warning() {
 }
 
 log_info() {
-    echo -e "${BLUE}[INFO]${RESET} $*"
+    if [[ "${QUIET}" -eq 0 ]]; then
+        echo -e "${BLUE}[INFO]${RESET} $*"
+    fi
 }
 
 log_success() {
-    echo -e "${GREEN}[SUCCESS]${RESET} $*"
+    if [[ "${QUIET}" -eq 0 ]]; then
+        echo -e "${GREEN}[SUCCESS]${RESET} $*"
+    fi
 }
 
 log_debug() {
-    if [[ "${DEBUG}" -eq 1 ]]; then
+    if [[ "${DEBUG}" -eq 1 && "${QUIET}" -eq 0 ]]; then
         echo -e "${MAGENTA}[DEBUG]${RESET} $*" >&2
     fi
 }
 
 log_verbose() {
-    if [[ "${VERBOSE}" -eq 1 ]]; then
+    if [[ "${VERBOSE}" -eq 1 && "${QUIET}" -eq 0 ]]; then
         echo -e "${CYAN}[VERBOSE]${RESET} $*"
     fi
 }
@@ -268,9 +276,9 @@ parse_arguments() {
                 fi
                 ;;
             -q|--quiet)
-                VERBOSE=0
-                DEBUG=0
-                exec 1>/dev/null  # Redirect stdout to /dev/null
+                QUIET=1
+                # Note: --quiet suppresses info/success/verbose/debug output
+                # but errors and warnings are still shown
                 shift
                 ;;
             --)
